@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:myspots/widgets/image_input.dart';
 import 'package:flutter/material.dart';
+import 'package:myspots/models/place.dart';
+import 'package:myspots/widgets/location_input.dart';
 
 class AddPlaceScreen extends StatefulWidget {
   const AddPlaceScreen({super.key});
@@ -14,6 +16,13 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   File? _selectedImage;
+  PlaceLocation? _selectedLocation;
+
+  void _onSelectLocation(PlaceLocation location) {
+    setState(() {
+      _selectedLocation = location;
+    });
+  }
 
   void _onPickImage(File image) {
     setState(() {
@@ -131,12 +140,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
               const SizedBox(height: 16),
               ImageInput(onPickImage: _onPickImage),
               const SizedBox(height: 16),
-              _FeatureCard(
-                icon: Icons.map_outlined,
-                title: 'Location',
-                description: 'Save the exact location of your favorite spot.',
-                status: 'Coming soon',
-              ),
+              LocationInput(onSelectLocation: _onSelectLocation),
               const SizedBox(height: 28),
               FilledButton.icon(
                 onPressed: null,
@@ -153,83 +157,14 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
               Text(
                 _selectedImage == null
                     ? 'Choose a photo to continue.'
-                    : 'Photo ready! Add a location to save your place.',
+                    : _selectedLocation == null
+                    ? 'Photo ready! Add a location to continue.'
+                    : 'Photo and location ready! Saving will be enabled soon.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Color(0xFF647C74), fontSize: 12),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.status,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFFE1EEEA)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 25,
-              backgroundColor: const Color(0xFFDFF5EF),
-              child: Icon(icon, color: const Color(0xFF0F766E)),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF115E59),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF647C74),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    status,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0F766E),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );
