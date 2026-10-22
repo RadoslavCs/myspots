@@ -1,16 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const MainApp());
+  WidgetsFlutterBinding.ensureInitialized();
+
+  runApp(const ProviderScope(child: MySpotsApp()));
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MySpotsApp extends StatelessWidget {
+  const MySpotsApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    return MaterialApp(
+      title: 'MySpots',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+      ),
+      home: const Scaffold(
+        appBar: null,
+        body: Center(child: Text('Welcome to MySpots!')),
+      ),
     );
   }
 }
