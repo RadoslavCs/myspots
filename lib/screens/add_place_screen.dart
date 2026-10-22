@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:myspots/widgets/image_input.dart';
 import 'package:flutter/material.dart';
 
 class AddPlaceScreen extends StatefulWidget {
@@ -10,6 +13,13 @@ class AddPlaceScreen extends StatefulWidget {
 class _AddPlaceScreenState extends State<AddPlaceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  File? _selectedImage;
+
+  void _onPickImage(File image) {
+    setState(() {
+      _selectedImage = image;
+    });
+  }
 
   @override
   void dispose() {
@@ -119,12 +129,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _FeatureCard(
-                icon: Icons.add_a_photo_outlined,
-                title: 'Photo',
-                description: 'Add a photo from your camera or gallery.',
-                status: 'Next update',
-              ),
+              ImageInput(onPickImage: _onPickImage),
               const SizedBox(height: 16),
               _FeatureCard(
                 icon: Icons.map_outlined,
@@ -145,10 +150,12 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'Saving will be enabled after photo and location are added.',
+              Text(
+                _selectedImage == null
+                    ? 'Choose a photo to continue.'
+                    : 'Photo ready! Add a location to save your place.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFF647C74), fontSize: 12),
+                style: const TextStyle(color: Color(0xFF647C74), fontSize: 12),
               ),
             ],
           ),
