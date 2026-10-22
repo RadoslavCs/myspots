@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:myspots/providers/places_provider.dart';
+import 'package:myspots/screens/add_place_screen.dart';
 import 'package:myspots/widgets/places_list.dart';
 
 class PlacesScreen extends ConsumerWidget {
   const PlacesScreen({super.key});
+
+  void _openAddPlaceScreen(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (context) => const AddPlaceScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,6 +45,16 @@ class PlacesScreen extends ConsumerWidget {
         ),
       ),
       body: PlacesList(places: places),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openAddPlaceScreen(context),
+        backgroundColor: const Color(0xFF0F766E),
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text(
+          'Add Place',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
     );
   }
 }
