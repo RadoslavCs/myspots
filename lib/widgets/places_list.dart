@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myspots/models/place.dart';
+import 'package:myspots/screens/place_detail_screen.dart';
 
 class PlacesList extends StatelessWidget {
   const PlacesList({super.key, required this.places});
@@ -64,6 +65,13 @@ class PlacesList extends StatelessWidget {
             side: const BorderSide(color: Color(0xFFE1EEEA)),
           ),
           child: ListTile(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => PlaceDetailScreen(place: place),
+                ),
+              );
+            },
             contentPadding: const EdgeInsets.all(12),
             leading: ClipRRect(
               borderRadius: BorderRadius.circular(12),

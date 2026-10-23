@@ -1,18 +1,20 @@
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:myspots/providers/places_provider.dart';
 import 'package:myspots/widgets/image_input.dart';
 import 'package:flutter/material.dart';
 import 'package:myspots/models/place.dart';
 import 'package:myspots/widgets/location_input.dart';
 
-class AddPlaceScreen extends StatefulWidget {
+class AddPlaceScreen extends ConsumerStatefulWidget {
   const AddPlaceScreen({super.key});
 
   @override
-  State<AddPlaceScreen> createState() => _AddPlaceScreenState();
+  ConsumerState<AddPlaceScreen> createState() => _AddPlaceScreenState();
 }
 
-class _AddPlaceScreenState extends State<AddPlaceScreen> {
+class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   File? _selectedImage;
@@ -36,15 +38,30 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
     super.dispose();
   }
 
-  void _validateTitle() {
-    if (_formKey.currentState!.validate()) {
+  void _savePlace() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_selectedImage == null || _selectedLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Title is valid. Photo and location are coming next!'),
+          content: Text('Please add a photo and choose a location.'),
           behavior: SnackBarBehavior.floating,
         ),
       );
+      return;
     }
+
+    final place = Place(
+      title: _titleController.text.trim(),
+      image: _selectedImage!,
+      location: _selectedLocation!,
+    );
+
+    ref.read(placesProvider.notifier).addPlace(place);
+
+    Navigator.of(context).pop();
   }
 
   @override
@@ -128,11 +145,6 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                         },
                       ),
                       const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _validateTitle,
-                        icon: const Icon(Icons.check_circle_outline),
-                        label: const Text('Check place name'),
-                      ),
                     ],
                   ),
                 ),
@@ -143,7 +155,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
               LocationInput(onSelectLocation: _onSelectLocation),
               const SizedBox(height: 28),
               FilledButton.icon(
-                onPressed: null,
+                onPressed: _savePlace,
                 icon: const Icon(Icons.save_outlined),
                 label: const Text('Save Place'),
                 style: FilledButton.styleFrom(
@@ -159,7 +171,7 @@ class _AddPlaceScreenState extends State<AddPlaceScreen> {
                     ? 'Choose a photo to continue.'
                     : _selectedLocation == null
                     ? 'Photo ready! Add a location to continue.'
-                    : 'Photo and location ready! Saving will be enabled soon.',
+                    : 'Everything is ready! Save your favorite place.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Color(0xFF647C74), fontSize: 12),
               ),
