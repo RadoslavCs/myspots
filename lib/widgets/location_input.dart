@@ -1,7 +1,10 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 
 import 'package:myspots/models/place.dart';
+import 'package:myspots/screens/map_screen.dart';
+import 'package:myspots/services/geocoding_service.dart';
 
 class LocationInput extends StatefulWidget {
   const LocationInput({super.key, required this.onSelectLocation});
@@ -58,10 +61,21 @@ class _LocationInputState extends State<LocationInput> {
         throw Exception('Invalid GPS coordinates.');
       }
 
+      String address = 'GPS location';
+
+      try {
+        address = await GeocodingService.getAddress(
+          latitude: latitude,
+          longitude: longitude,
+        );
+      } catch (_) {
+        // GPS coordinates are still valid if geocoding is unavailable.
+      }
+
       final selectedLocation = PlaceLocation(
         latitude: latitude,
         longitude: longitude,
-        address: 'GPS location',
+        address: address,
       );
 
       if (!mounted) return;
@@ -87,6 +101,47 @@ class _LocationInputState extends State<LocationInput> {
         });
       }
     }
+  }
+
+  Future<void> _openMap() async {
+    final initialLocation =
+        _selectedLocation ??
+        const PlaceLocation(
+          latitude: 48.8945,
+          longitude: 18.0444,
+          address: 'Trenčín',
+        );
+
+    final selectedLocation = await Navigator.of(context).push<PlaceLocation>(
+      MaterialPageRoute(
+        builder: (context) => MapScreen(initialLocation: initialLocation),
+      ),
+    );
+
+    if (!mounted || selectedLocation == null) return;
+
+    setState(() {
+      _selectedLocation = selectedLocation;
+    });
+
+    widget.onSelectLocation(selectedLocation);
+  }
+
+  String _getStaticMapUrl(PlaceLocation location) {
+    final apiKey = dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+
+    final latitude = location.latitude;
+    final longitude = location.longitude;
+
+    return Uri.https('maps.googleapis.com', '/maps/api/staticmap', {
+      'center': '$latitude,$longitude',
+      'zoom': '15',
+      'size': '600x300',
+      'scale': '2',
+      'maptype': 'roadmap',
+      'markers': 'color:red|$latitude,$longitude',
+      'key': apiKey,
+    }).toString();
   }
 
   @override
@@ -132,17 +187,44 @@ class _LocationInputState extends State<LocationInput> {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 34,
-                    backgroundColor: const Color(0xFFDFF5EF),
-                    child: Icon(
-                      _selectedLocation == null
-                          ? Icons.my_location_rounded
-                          : Icons.check_circle_rounded,
-                      size: 34,
-                      color: const Color(0xFF0F766E),
+                  if (_selectedLocation == null)
+                    const CircleAvatar(
+                      radius: 34,
+                      backgroundColor: Color(0xFFDFF5EF),
+                      child: Icon(
+                        Icons.my_location_rounded,
+                        size: 34,
+                        color: Color(0xFF0F766E),
+                      ),
+                    )
+                  else
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 180,
+                        child: Image.network(
+                          _getStaticMapUrl(_selectedLocation!),
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(
+                                Icons.map_outlined,
+                                size: 48,
+                                color: Color(0xFF0F766E),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 14),
                   Text(
                     _selectedLocation == null
@@ -164,6 +246,15 @@ class _LocationInputState extends State<LocationInput> {
                     Text(
                       'Longitude: ${_selectedLocation!.longitude.toStringAsFixed(6)}',
                       style: const TextStyle(color: Color(0xFF47796D)),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      _selectedLocation!.address,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF115E59),
+                      ),
                     ),
                   ],
                 ],
@@ -191,6 +282,23 @@ class _LocationInputState extends State<LocationInput> {
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF0F766E),
                   foregroundColor: Colors.white,
+                  minimumSize: const Size.fromHeight(52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isGettingLocation ? null : _openMap,
+                icon: const Icon(Icons.map_outlined),
+                label: const Text('Choose on map'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0F766E),
+                  side: const BorderSide(color: Color(0xFF0F766E)),
                   minimumSize: const Size.fromHeight(52),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),

@@ -1,8 +1,24 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+val envProperties = Properties()
+val envFile = rootProject.file("../.env")
+
+if (envFile.exists()) {
+    envFile.inputStream().use {
+        envProperties.load(it)
+    }
+}
+
+val googleMapsApiKey =
+    envProperties.getProperty("GOOGLE_MAPS_API_KEY")
+        ?: System.getenv("GOOGLE_MAPS_API_KEY")
+        ?: error("GOOGLE_MAPS_API_KEY nie je nastavený")
 
 android {
     namespace = "com.example.myspots"
@@ -21,6 +37,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] = googleMapsApiKey
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
         // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
