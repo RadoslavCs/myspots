@@ -250,7 +250,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> {
                     Expanded(
                       child: items.isNotEmpty && filteredPlaces.isEmpty
                           ? Center(
-                              child: Padding(
+                              child: SingleChildScrollView(
                                 padding: const EdgeInsets.all(24),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
