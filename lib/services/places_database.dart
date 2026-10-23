@@ -20,7 +20,7 @@ class PlacesDatabase {
 
     _database = await openDatabase(
       path.join(databasePath, 'myspots.db'),
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE places (
@@ -30,8 +30,17 @@ class PlacesDatabase {
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
             address TEXT NOT NULL
+            category TEXT NOT NULL DEFAULT 'other'
           )
         ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            "ALTER TABLE places "
+            "ADD COLUMN category TEXT NOT NULL DEFAULT 'other'",
+          );
+        }
       },
     );
 
@@ -48,6 +57,7 @@ class PlacesDatabase {
         id: row['id'] as String,
         title: row['title'] as String,
         image: File(row['image_path'] as String),
+        category: PlaceCategory.values.byName(row['category'] as String),
         location: PlaceLocation(
           latitude: row['latitude'] as double,
           longitude: row['longitude'] as double,
@@ -76,6 +86,7 @@ class PlacesDatabase {
       id: place.id,
       title: place.title,
       image: permanentImage,
+      category: place.category,
       location: place.location,
     );
 
@@ -86,6 +97,7 @@ class PlacesDatabase {
         'id': savedPlace.id,
         'title': savedPlace.title,
         'image_path': savedPlace.image.path,
+        'category': savedPlace.category.name,
         'latitude': savedPlace.location.latitude,
         'longitude': savedPlace.location.longitude,
         'address': savedPlace.location.address,
@@ -100,12 +112,16 @@ class PlacesDatabase {
     }
   }
 
-  Future<void> updatePlaceTitle(String id, String title) async {
+  Future<void> updatePlace(
+    String id,
+    String title,
+    PlaceCategory category,
+  ) async {
     final db = await database;
 
     final updatedRows = await db.update(
       'places',
-      {'title': title},
+      {'title': title, 'category': category.name},
       where: 'id = ?',
       whereArgs: [id],
     );

@@ -89,10 +89,25 @@ class PlacesList extends StatelessWidget {
                 color: Color(0xFF115E59),
               ),
             ),
-            subtitle: Text(
-              place.location.address,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 4),
+                Text(
+                  place.category.label,
+                  style: const TextStyle(
+                    color: Color(0xFF0F766E),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  place.location.address,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
             trailing: const Icon(
               Icons.chevron_right_rounded,

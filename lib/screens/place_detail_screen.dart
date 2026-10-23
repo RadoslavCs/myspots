@@ -69,6 +69,17 @@ class PlaceDetailScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 8),
+            Chip(
+              avatar: const Icon(
+                Icons.category_outlined,
+                size: 18,
+                color: Color(0xFF0F766E),
+              ),
+              label: Text(currentPlace.category.label),
+              backgroundColor: const Color(0xFFDFF5EF),
+              side: BorderSide.none,
+            ),
+            const SizedBox(height: 8),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

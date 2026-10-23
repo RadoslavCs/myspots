@@ -15,12 +15,14 @@ class EditPlaceScreen extends ConsumerStatefulWidget {
 class _EditPlaceScreenState extends ConsumerState<EditPlaceScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _titleController;
+  late PlaceCategory _selectedCategory;
   bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.place.title);
+    _selectedCategory = widget.place.category;
   }
 
   @override
@@ -43,7 +45,7 @@ class _EditPlaceScreenState extends ConsumerState<EditPlaceScreen> {
     try {
       await ref
           .read(placesProvider.notifier)
-          .updatePlaceTitle(widget.place.id, title);
+          .updatePlace(widget.place.id, title, _selectedCategory);
 
       if (!mounted) return;
 
@@ -118,6 +120,28 @@ class _EditPlaceScreenState extends ConsumerState<EditPlaceScreen> {
                     },
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<PlaceCategory>(
+                initialValue: _selectedCategory,
+                decoration: const InputDecoration(
+                  labelText: 'Category',
+                  prefixIcon: Icon(Icons.category_outlined),
+                  border: OutlineInputBorder(),
+                ),
+                items: [
+                  for (final category in PlaceCategory.values)
+                    DropdownMenuItem(
+                      value: category,
+                      child: Text(category.label),
+                    ),
+                ],
+                onChanged: _isSaving
+                    ? null
+                    : (category) {
+                        if (category == null) return;
+                        setState(() => _selectedCategory = category);
+                      },
               ),
               const SizedBox(height: 24),
               FilledButton.icon(

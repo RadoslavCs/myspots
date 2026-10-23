@@ -4,6 +4,18 @@ import 'package:uuid/uuid.dart';
 
 const uuid = Uuid();
 
+enum PlaceCategory {
+  nature('Nature'),
+  food('Food'),
+  travel('Travel'),
+  culture('Culture'),
+  other('Other');
+
+  const PlaceCategory(this.label);
+
+  final String label;
+}
+
 class PlaceLocation {
   const PlaceLocation({
     required this.latitude,
@@ -21,6 +33,7 @@ class Place {
     required this.title,
     required this.image,
     required this.location,
+    this.category = PlaceCategory.other,
     String? id,
   }) : id = id ?? uuid.v4();
 
@@ -28,4 +41,5 @@ class Place {
   final String title;
   final File image;
   final PlaceLocation location;
+  final PlaceCategory category;
 }

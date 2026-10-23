@@ -19,6 +19,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   final _titleController = TextEditingController();
   File? _selectedImage;
   PlaceLocation? _selectedLocation;
+  PlaceCategory _selectedCategory = PlaceCategory.other;
   bool _isSaving = false;
 
   void _onSelectLocation(PlaceLocation location) {
@@ -63,6 +64,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
         title: _titleController.text.trim(),
         image: _selectedImage!,
         location: _selectedLocation!,
+        category: _selectedCategory,
       );
 
       await ref.read(placesProvider.notifier).addPlace(place);
@@ -170,6 +172,33 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                       ),
                       const SizedBox(height: 8),
                     ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                elevation: 0,
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: DropdownButtonFormField<PlaceCategory>(
+                    initialValue: _selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      prefixIcon: Icon(Icons.category_outlined),
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final category in PlaceCategory.values)
+                        DropdownMenuItem(
+                          value: category,
+                          child: Text(category.label),
+                        ),
+                    ],
+                    onChanged: (category) {
+                      if (category == null) return;
+                      setState(() => _selectedCategory = category);
+                    },
                   ),
                 ),
               ),

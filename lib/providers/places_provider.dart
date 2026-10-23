@@ -16,8 +16,12 @@ class PlacesNotifier extends AsyncNotifier<List<Place>> {
     state = AsyncData([savedPlace, ...currentPlaces]);
   }
 
-  Future<void> updatePlaceTitle(String id, String title) async {
-    await PlacesDatabase.instance.updatePlaceTitle(id, title);
+  Future<void> updatePlace(
+    String id,
+    String title,
+    PlaceCategory category,
+  ) async {
+    await PlacesDatabase.instance.updatePlace(id, title, category);
 
     final currentPlaces = await future;
 
@@ -29,6 +33,7 @@ class PlacesNotifier extends AsyncNotifier<List<Place>> {
             title: title,
             image: place.image,
             location: place.location,
+            category: category,
           )
         else
           place,
