@@ -44,7 +44,19 @@ class PlacesScreen extends ConsumerWidget {
           ],
         ),
       ),
-      body: PlacesList(places: places),
+      body: places.when(
+        data: (items) => PlacesList(places: items),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              'Could not load places: $error',
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddPlaceScreen(context),
         backgroundColor: const Color(0xFF0F766E),

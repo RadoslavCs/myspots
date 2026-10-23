@@ -19,6 +19,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   final _titleController = TextEditingController();
   File? _selectedImage;
   PlaceLocation? _selectedLocation;
+  bool _isSaving = false;
 
   void _onSelectLocation(PlaceLocation location) {
     setState(() {
@@ -38,8 +39,8 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
     super.dispose();
   }
 
-  void _savePlace() {
-    if (!_formKey.currentState!.validate()) {
+  Future<void> _savePlace() async {
+    if (_isSaving || !_formKey.currentState!.validate()) {
       return;
     }
 
@@ -53,15 +54,38 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
       return;
     }
 
-    final place = Place(
-      title: _titleController.text.trim(),
-      image: _selectedImage!,
-      location: _selectedLocation!,
-    );
+    setState(() {
+      _isSaving = true;
+    });
 
-    ref.read(placesProvider.notifier).addPlace(place);
+    try {
+      final place = Place(
+        title: _titleController.text.trim(),
+        image: _selectedImage!,
+        location: _selectedLocation!,
+      );
 
-    Navigator.of(context).pop();
+      await ref.read(placesProvider.notifier).addPlace(place);
+
+      if (!mounted) return;
+
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Could not save place: $error'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   @override
@@ -155,9 +179,15 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
               LocationInput(onSelectLocation: _onSelectLocation),
               const SizedBox(height: 28),
               FilledButton.icon(
-                onPressed: _savePlace,
-                icon: const Icon(Icons.save_outlined),
-                label: const Text('Save Place'),
+                onPressed: _isSaving ? null : _savePlace,
+                icon: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.save_outlined),
+                label: Text(_isSaving ? 'Saving place...' : 'Save Place'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                   shape: RoundedRectangleBorder(

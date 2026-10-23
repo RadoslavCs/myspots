@@ -1,17 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:myspots/models/place.dart';
+import 'package:myspots/services/places_database.dart';
 
-class PlacesNotifier extends Notifier<List<Place>> {
+class PlacesNotifier extends AsyncNotifier<List<Place>> {
   @override
-  List<Place> build() {
-    return [];
+  Future<List<Place>> build() {
+    return PlacesDatabase.instance.getPlaces();
   }
 
-  void addPlace(Place place) {
-    state = [...state, place];
+  Future<void> addPlace(Place place) async {
+    final savedPlace = await PlacesDatabase.instance.insertPlace(place);
+
+    final currentPlaces = await future;
+
+    state = AsyncData([savedPlace, ...currentPlaces]);
   }
 }
 
-final placesProvider = NotifierProvider<PlacesNotifier, List<Place>>(
+final placesProvider =
+    AsyncNotifierProvider<PlacesNotifier, List<Place>>(
   PlacesNotifier.new,
 );
