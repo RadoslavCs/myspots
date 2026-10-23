@@ -55,6 +55,16 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> {
     }).toList();
   }
 
+  void _clearFilters() {
+    _searchController.clear();
+
+    setState(() {
+      _selectedCategory = null;
+    });
+
+    FocusScope.of(context).unfocus();
+  }
+
   @override
   Widget build(BuildContext context) {
     final places = ref.watch(placesProvider);
@@ -92,76 +102,197 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: TextField(
               controller: _searchController,
+              textInputAction: TextInputAction.search,
+              onTapOutside: (_) => FocusScope.of(context).unfocus(),
+              onSubmitted: (_) => FocusScope.of(context).unfocus(),
               decoration: InputDecoration(
                 hintText: 'Search places or addresses...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchController.text.isEmpty
                     ? null
                     : IconButton(
                         tooltip: 'Clear search',
-                        icon: const Icon(Icons.close),
-                        onPressed: _searchController.clear,
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () {
+                          _searchController.clear();
+                          FocusScope.of(context).unfocus();
+                        },
                       ),
                 filled: true,
                 fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
           ),
-          SizedBox(
-            height: 58,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: const Text('All'),
-                    selected: _selectedCategory == null,
-                    onSelected: (_) {
-                      setState(() => _selectedCategory = null);
-                    },
-                  ),
-                ),
-                for (final category in PlaceCategory.values)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(category.label),
-                      selected: _selectedCategory == category,
-                      onSelected: (_) {
-                        setState(() => _selectedCategory = category);
-                      },
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 58,
+                child: Stack(
+                  children: [
+                    ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: const Text('All'),
+                            selected: _selectedCategory == null,
+                            onSelected: (_) {
+                              setState(() => _selectedCategory = null);
+                            },
+                          ),
+                        ),
+                        for (final category in PlaceCategory.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: ChoiceChip(
+                              label: Text(category.label),
+                              selected: _selectedCategory == category,
+                              onSelected: (_) {
+                                setState(() => _selectedCategory = category);
+                              },
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-              ],
-            ),
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      right: 0,
+                      child: IgnorePointer(
+                        child: Container(
+                          width: 24,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [Color(0x00F8FCFA), Color(0xFFF8FCFA)],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20, bottom: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.swipe_left_rounded,
+                      size: 15,
+                      color: Color(0xFF647C74),
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Swipe to explore categories',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF647C74)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           Expanded(
             child: places.when(
               data: (items) {
                 final filteredPlaces = _filterPlaces(items);
 
-                if (items.isNotEmpty && filteredPlaces.isEmpty) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text(
-                        'No places match your search or category.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF647C74),
-                        ),
+                final hasActiveFilters =
+                    _searchController.text.trim().isNotEmpty ||
+                    _selectedCategory != null;
+
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.place_outlined,
+                            size: 18,
+                            color: Color(0xFF0F766E),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${filteredPlaces.length} '
+                            '${filteredPlaces.length == 1 ? 'place' : 'places'}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF115E59),
+                            ),
+                          ),
+                          const Spacer(),
+                          if (hasActiveFilters)
+                            TextButton.icon(
+                              onPressed: _clearFilters,
+                              icon: const Icon(
+                                Icons.restart_alt_rounded,
+                                size: 18,
+                              ),
+                              label: const Text('Reset filters'),
+                            ),
+                        ],
                       ),
                     ),
-                  );
-                }
-
-                return PlacesList(places: filteredPlaces);
+                    Expanded(
+                      child: items.isNotEmpty && filteredPlaces.isEmpty
+                          ? Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.search_off_rounded,
+                                      size: 54,
+                                      color: Color(0xFF0F766E),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'No matching places',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF115E59),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    const Text(
+                                      'Try another search or category.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Color(0xFF647C74),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    OutlinedButton.icon(
+                                      onPressed: _clearFilters,
+                                      icon: const Icon(
+                                        Icons.restart_alt_rounded,
+                                      ),
+                                      label: const Text('Clear filters'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          : PlacesList(places: filteredPlaces),
+                    ),
+                  ],
+                );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, stackTrace) => Center(

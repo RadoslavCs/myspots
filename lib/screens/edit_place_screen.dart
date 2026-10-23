@@ -76,7 +76,8 @@ class _EditPlaceScreenState extends ConsumerState<EditPlaceScreen> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
             children: [
               const Text(
                 'Give your favorite place a new name.',

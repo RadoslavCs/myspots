@@ -98,7 +98,8 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(20),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 36),
             children: [
               const Text(
                 'Capture a place worth remembering.',

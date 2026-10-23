@@ -51,7 +51,8 @@ class PlacesList extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
       itemCount: places.length,
       itemBuilder: (context, index) {
         final place = places[index];

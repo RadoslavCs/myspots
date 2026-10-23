@@ -29,7 +29,7 @@ class PlacesDatabase {
             image_path TEXT NOT NULL,
             latitude REAL NOT NULL,
             longitude REAL NOT NULL,
-            address TEXT NOT NULL
+            address TEXT NOT NULL,
             category TEXT NOT NULL DEFAULT 'other'
           )
         ''');
