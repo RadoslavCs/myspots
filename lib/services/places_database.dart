@@ -41,10 +41,7 @@ class PlacesDatabase {
   Future<List<Place>> getPlaces() async {
     final db = await database;
 
-    final rows = await db.query(
-      'places',
-      orderBy: 'rowid DESC',
-    );
+    final rows = await db.query('places', orderBy: 'rowid DESC');
 
     return rows.map((row) {
       return Place(
@@ -61,8 +58,7 @@ class PlacesDatabase {
   }
 
   Future<Place> insertPlace(Place place) async {
-    final documentsDirectory =
-        await getApplicationDocumentsDirectory();
+    final documentsDirectory = await getApplicationDocumentsDirectory();
 
     final imagesDirectory = Directory(
       path.join(documentsDirectory.path, 'place_images'),
@@ -73,10 +69,7 @@ class PlacesDatabase {
     final extension = path.extension(place.image.path);
 
     final permanentImage = await place.image.copy(
-      path.join(
-        imagesDirectory.path,
-        '${place.id}$extension',
-      ),
+      path.join(imagesDirectory.path, '${place.id}$extension'),
     );
 
     final savedPlace = Place(
@@ -89,18 +82,14 @@ class PlacesDatabase {
     try {
       final db = await database;
 
-      await db.insert(
-        'places',
-        {
-          'id': savedPlace.id,
-          'title': savedPlace.title,
-          'image_path': savedPlace.image.path,
-          'latitude': savedPlace.location.latitude,
-          'longitude': savedPlace.location.longitude,
-          'address': savedPlace.location.address,
-        },
-        conflictAlgorithm: ConflictAlgorithm.abort,
-      );
+      await db.insert('places', {
+        'id': savedPlace.id,
+        'title': savedPlace.title,
+        'image_path': savedPlace.image.path,
+        'latitude': savedPlace.location.latitude,
+        'longitude': savedPlace.location.longitude,
+        'address': savedPlace.location.address,
+      }, conflictAlgorithm: ConflictAlgorithm.abort);
 
       return savedPlace;
     } catch (_) {
@@ -108,6 +97,52 @@ class PlacesDatabase {
         await permanentImage.delete();
       }
       rethrow;
+    }
+  }
+
+  Future<void> updatePlaceTitle(String id, String title) async {
+    final db = await database;
+
+    final updatedRows = await db.update(
+      'places',
+      {'title': title},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (updatedRows != 1) {
+      throw StateError('Place not found.');
+    }
+  }
+
+  Future<void> deletePlace(String id) async {
+    final db = await database;
+
+    final rows = await db.query(
+      'places',
+      columns: ['image_path'],
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+
+    if (rows.isEmpty) {
+      throw StateError('Place not found.');
+    }
+
+    final imagePath = rows.first['image_path'] as String;
+
+    await db.delete('places', where: 'id = ?', whereArgs: [id]);
+
+    final image = File(imagePath);
+
+    if (await image.exists()) {
+      try {
+        await image.delete();
+      } on FileSystemException {
+        // The database record is already deleted.
+        // An orphaned image can be cleaned up separately.
+      }
     }
   }
 }
